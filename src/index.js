@@ -89,12 +89,18 @@ async function renderGraph({ dot, process, tokens }, rootId) {
     const trTokens = [];
 
     for (const token of tokens) {
-      const tokenRelatedTransInfo = token.transitions.find(
+      const tokensInfo = token.transitions.filter(
         tokTr => tokTr.transitionId === transition.id
       );
+      const tokenRelatedTransInfo = tokensInfo.sort(
+        (a, b) => b.time - a.time
+      )[0];
 
       if (tokenRelatedTransInfo) {
-        trTokens.push({ token, state: tokenRelatedTransInfo.state });
+        trTokens.push({
+          token: { ...token, transitions: undefined },
+          state: tokenRelatedTransInfo.state
+        });
       }
     }
 
