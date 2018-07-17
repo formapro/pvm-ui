@@ -2845,9 +2845,9 @@ function getRenderedGraph(digraph) {
 
 async function renderGraph({ dot, process, tokens }, rootId) {
   const root = rootId ? document.getElementById(rootId) : document.body;
-  const cachedTransitionsInfo = {};
   const fakePopup = createStatsElement();
   const svgGraph = await getRenderedGraph(dot);
+  // const cachedTransitionsInfo = {};
 
   root.append(fakePopup);
   root.append(svgGraph);
@@ -2885,7 +2885,9 @@ async function renderGraph({ dot, process, tokens }, rootId) {
 
           for (const tokenEl of tokenElements) {
             tokenEl.addEventListener("click", ev => {
-              const tokenInfo = elemInfo.tokens.find(t => t.id === tokenEl.id);
+              const tokenInfo = elemInfo.tokens.find(
+                t => t.token.id === tokenEl.id
+              );
               curPopup.innerHTML = prettifyToken(tokenInfo);
               ev.stopPropagation();
             });
@@ -2904,21 +2906,27 @@ async function renderGraph({ dot, process, tokens }, rootId) {
   }
 
   function getTransitionById(id) {
-    if (cachedTransitionsInfo[id]) return cachedTransitionsInfo[id];
+    // if (cachedTransitionsInfo[id]) return cachedTransitionsInfo[id];
 
     const transition = process.transitions[id];
 
     if (!transition) return;
 
-    const trTokens = tokens
-      .filter(token =>
-        token.transitions.find(tokTr => tokTr.transitionId === transition.id)
-      )
-      .map(t => ({ ...t, transitions: undefined }));
+    const trTokens = [];
+
+    for (const token of tokens) {
+      const tokenRelatedTransInfo = token.transitions.find(
+        tokTr => tokTr.transitionId === transition.id
+      );
+
+      if (tokenRelatedTransInfo) {
+        trTokens.push({ token, state: tokenRelatedTransInfo.state });
+      }
+    }
 
     const trInfo = { transition, tokens: trTokens };
 
-    cachedTransitionsInfo[transition.id] = trInfo;
+    // cachedTransitionsInfo[transition.id] = trInfo;
 
     return trInfo;
   }
@@ -2967,11 +2975,16 @@ function prettifyTransition(info) {
 }
 
 function prettifyTokens(tokens) {
-  return tokens.map(t => `<span id=${t.id} class=${"token"}>${t.id}</span>`);
+  return tokens.map(
+    tInfo =>
+      `<span id=${tInfo.token.id} class=${"token"}>${tInfo.token.id} - ${
+        tInfo.state
+      }</span>`
+  );
 }
 
-function prettifyToken(token) {
-  const json = prettifyJSON(token);
+function prettifyToken(tokenInfo) {
+  const json = prettifyJSON(tokenInfo.token);
 
   return "Token:<br><br>" + json;
 }
