@@ -1,0 +1,14 @@
+{
+  "name": "gviz",
+  "version": "0.0.1",
+  "main": "src/index.js",
+  "license": "MIT",
+  "dependencies": {
+    "viz.js": "^2.0.0"
+  },
+  "devDependencies": {
+    "prettier": "^1.13.7",
+    "webpack": "^4.16.1",
+    "webpack-command": "^0.4.1"
+  }
+}
