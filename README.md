@@ -8,5 +8,5 @@ yarn webpack
 ### Run example
 
 ```bash
-firefox $PWD/public/index.html
+firefox $PWD/index.html
 ```
