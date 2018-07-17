@@ -123,6 +123,7 @@ function createStatsElement() {
   const el = document.createElement("div");
   el.id = STATS_POPUP_ID;
   el.className = STATS_POPUP_CLASS;
+  el.style.minWidth = "500px";
   return el;
 }
 
