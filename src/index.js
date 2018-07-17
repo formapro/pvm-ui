@@ -4,22 +4,23 @@ const renderer = require("viz.js/full.render");
 let viz = new Viz(renderer);
 
 const STATS_POPUP_ID = "stats-popup";
+const pvm = {};
 
-global.getRenderedGraph = function getRenderedGraph(digraph) {
+function getRenderedGraph(digraph) {
   return viz.renderSVGElement(digraph).catch(err => {
     viz = new Viz(renderer);
     console.error(err.stack);
   });
 };
 
-global.getJSONGraph = function getRenderedGraph(digraph) {
+function getJSONGraph(digraph) {
   return viz.renderJSONObject(digraph).catch(err => {
     viz = new Viz(renderer);
     console.error(err.stack);
   });
 };
 
-global.renderGraph = async function renderGraph({ dot, process }, rootId) {
+async function renderGraph({ dot, process }, rootId) {
   const root = rootId ? document.getElementById(rootId) : document.body;
   const fakePopup = createStatsElement();
   const svgGraph = await getRenderedGraph(dot);
@@ -45,7 +46,7 @@ global.renderGraph = async function renderGraph({ dot, process }, rootId) {
         const { top, left, width } = el.getBoundingClientRect();
 
         const newPopup = createStatsElement();
-        newPopup.innerText = JSON.stringify(nodeInfo, undefined, 2);
+        newPopup.innerHTML = prettifyInfo(nodeInfo);
         newPopup.style.backgroundColor = "#eee";
         newPopup.style.color = "#123";
         newPopup.style.padding = "10px";
@@ -73,3 +74,13 @@ function createStatsElement() {
   el.id = STATS_POPUP_ID;
   return el;
 }
+
+function prettifyInfo(elInfo) {
+  const rows = Object.entries(elInfo).map(([key, val]) => {
+    return `<tr><td>${key}</td><td>${JSON.stringify(val, undefined, 2).replace(/\n/g, "<br>").replace(/\s/g, "&#8194")}</td></tr>`;
+  })
+  return '<table>' + rows.join("") + "</table>"
+}
+
+pvm.renderGraph = renderGraph;
+global.pvm = pvm;
