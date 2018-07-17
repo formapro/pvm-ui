@@ -11,14 +11,14 @@ function getRenderedGraph(digraph) {
     viz = new Viz(renderer);
     console.error(err.stack);
   });
-};
+}
 
 function getJSONGraph(digraph) {
   return viz.renderJSONObject(digraph).catch(err => {
     viz = new Viz(renderer);
     console.error(err.stack);
   });
-};
+}
 
 async function renderGraph({ dot, process }, rootId) {
   const root = rootId ? document.getElementById(rootId) : document.body;
@@ -76,10 +76,9 @@ function createStatsElement() {
 }
 
 function prettifyInfo(elInfo) {
-  const rows = Object.entries(elInfo).map(([key, val]) => {
-    return `<tr><td>${key}</td><td>${JSON.stringify(val, undefined, 2).replace(/\n/g, "<br>").replace(/\s/g, "&#8194")}</td></tr>`;
-  })
-  return '<table>' + rows.join("") + "</table>"
+  return JSON.stringify(elInfo, undefined, 2)
+    .replace(/\n/g, "<br>")
+    .replace(/\s/g, "&#8194");
 }
 
 pvm.renderGraph = renderGraph;
