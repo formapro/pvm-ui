@@ -2827,24 +2827,28 @@ module.exports = g;
 /* WEBPACK VAR INJECTION */(function(global) {const Viz = __webpack_require__(/*! viz.js */ "./node_modules/viz.js/viz.es.js").default;
 const renderer = __webpack_require__(/*! viz.js/full.render */ "./node_modules/viz.js/full.render.js");
 
-let viz = new Viz(renderer);
 
 const STATS_POPUP_ID = "stats-popup";
+const STATS_POPUP_CLASS = "StatPopup";
+const FAKE_POPUP = createStatsElement();
 const pvm = {};
+
+let viz = new Viz(renderer);
+let curPopup = FAKE_POPUP;
 
 function getRenderedGraph(digraph) {
   return viz.renderSVGElement(digraph).catch(err => {
     viz = new Viz(renderer);
     console.error(err.stack);
   });
-};
+}
 
 function getJSONGraph(digraph) {
   return viz.renderJSONObject(digraph).catch(err => {
     viz = new Viz(renderer);
     console.error(err.stack);
   });
-};
+}
 
 async function renderGraph({ dot, process }, rootId) {
   const root = rootId ? document.getElementById(rootId) : document.body;
@@ -2862,12 +2866,21 @@ async function renderGraph({ dot, process }, rootId) {
   for (const node of nodes) createGraphElHandler(graphNodesMap)(node);
   for (const edge of edges) createGraphElHandler(graphEdgesMap)(edge);
 
+  document.body.addEventListener("click", ev => {
+    if (curPopup !== FAKE_POPUP) {
+      root.replaceChild(FAKE_POPUP, curPopup);
+      curPopup = FAKE_POPUP;
+    }
+  });
+
+  // === where ===
+
   function createGraphElHandler(elMap) {
     return function handleGraphElement(el) {
       const id = el.id;
       const nodeInfo = elMap[id];
 
-      el.addEventListener("click", function() {
+      el.addEventListener("click", function(ev) {
         const oldPopup = document.getElementById(STATS_POPUP_ID);
         const { top, left, width } = el.getBoundingClientRect();
 
@@ -2881,14 +2894,18 @@ async function renderGraph({ dot, process }, rootId) {
         newPopup.style.top = window.scrollY + top + "px";
         newPopup.style.left = window.scrollX + left + width + 10 + "px";
 
-        newPopup.addEventListener("click", function() {
-          const fakePopup = createStatsElement();
+        //        newPopup.addEventListener("click", function() {
+        //          const fakePopup = createStatsElement();
+        //
+        //          root.replaceChild(fakePopup, newPopup);
+        //          // popup.replaceWith(fakePopup);
+        //        });
 
-          root.replaceChild(fakePopup, newPopup);
-          // popup.replaceWith(fakePopup);
-        });
+        curPopup = newPopup;
 
         root.replaceChild(newPopup, oldPopup);
+
+        ev.stopPropagation();
         // stats.replaceWith(popup);
       });
     };
@@ -2898,14 +2915,14 @@ async function renderGraph({ dot, process }, rootId) {
 function createStatsElement() {
   const el = document.createElement("div");
   el.id = STATS_POPUP_ID;
+  el.className = STATS_POPUP_CLASS;
   return el;
 }
 
 function prettifyInfo(elInfo) {
-  const rows = Object.entries(elInfo).map(([key, val]) => {
-    return `<tr><td>${key}</td><td>${JSON.stringify(val, undefined, 2).replace(/\n/g, "<br>").replace(/\s/g, "&#8194")}</td></tr>`;
-  })
-  return '<table>' + rows.join("") + "</table>"
+  return JSON.stringify(elInfo, undefined, 2)
+    .replace(/\n/g, "<br>")
+    .replace(/\s/g, "&#8194");
 }
 
 pvm.renderGraph = renderGraph;
