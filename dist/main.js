@@ -2855,49 +2855,47 @@ async function renderGraph({ dot, process, tokens }, rootId) {
   const nodes = document.getElementsByClassName("node");
   const edges = document.getElementsByClassName("edge");
 
-  for (const node of nodes) createGraphElHandler(getNodeById)(node);
-  for (const edge of edges) createGraphElHandler(getTransitionById)(edge);
+  for (const node of nodes)
+    createGraphElHandler(getNodeById, prettifyNode)(node);
+  for (const edge of edges)
+    createGraphElHandler(getTransitionById, prettifyTransition)(edge);
 
-  document.body.addEventListener("click", ev => {
-    if (curPopup !== FAKE_POPUP) {
-      root.replaceChild(FAKE_POPUP, curPopup);
-      curPopup = FAKE_POPUP;
-    }
-  });
+  document.body.addEventListener("click", hidePopupStats);
 
   // === where ===
 
-  function createGraphElHandler(getElement) {
+  function createGraphElHandler(getElement, prettifyInfo) {
     return function handleGraphElement(el) {
       const id = el.id;
-      const nodeInfo = getElement(id);
+      const elemInfo = getElement(id);
 
-      if (!nodeInfo) return;
+      if (!elemInfo) return;
 
       el.addEventListener("click", function(ev) {
         const oldPopup = document.getElementById(STATS_POPUP_ID);
         const clientRect = el.getBoundingClientRect();
-        const newPopup = fillStatsElement(nodeInfo, clientRect);
+        const newPopup = fillStatsElement(prettifyInfo(elemInfo), clientRect);
 
         // curNodeInfo = nodeInfo;
         curPopup = newPopup;
         root.replaceChild(newPopup, oldPopup); // newPopup.replaceWith(oldPopup);
 
-        if (nodeInfo.tokens) {
+        if (elemInfo.tokens) {
           const tokenElements = document.getElementsByClassName("token");
 
           for (const tokenEl of tokenElements) {
             tokenEl.addEventListener("click", ev => {
-              const tokenInfo = nodeInfo.tokens.find(t => t.id === tokenEl.id);
-              curPopup.innerHTML = prettifyInfo(tokenInfo);
+              const tokenInfo = elemInfo.tokens.find(t => t.id === tokenEl.id);
+              curPopup.innerHTML = prettifyToken(tokenInfo);
               ev.stopPropagation();
             });
           }
         }
 
+        newPopup.addEventListener("click", ev => ev.stopPropagation());
+
         ev.stopPropagation();
       });
-
     };
   }
 
@@ -2908,21 +2906,28 @@ async function renderGraph({ dot, process, tokens }, rootId) {
   function getTransitionById(id) {
     if (cachedTransitionsInfo[id]) return cachedTransitionsInfo[id];
 
-    const tr = process.transitions[id];
+    const transition = process.transitions[id];
 
-    if (!tr) return;
+    if (!transition) return;
 
     const trTokens = tokens
       .filter(token =>
-        token.transitions.find(tokTr => tokTr.transitionId === tr.id)
+        token.transitions.find(tokTr => tokTr.transitionId === transition.id)
       )
       .map(t => ({ ...t, transitions: undefined }));
 
-    const trInfo = { ...tr, tokens: trTokens };
+    const trInfo = { transition, tokens: trTokens };
 
-    cachedTransitionsInfo[tr.id] = trInfo;
+    cachedTransitionsInfo[transition.id] = trInfo;
 
     return trInfo;
+  }
+
+  function hidePopupStats() {
+    if (curPopup !== FAKE_POPUP) {
+      root.replaceChild(FAKE_POPUP, curPopup);
+      curPopup = FAKE_POPUP;
+    }
   }
 }
 
@@ -2935,7 +2940,7 @@ function createStatsElement() {
 
 function fillStatsElement(nodeInfo, { top, left, width }) {
   const newPopup = createStatsElement();
-  newPopup.innerHTML = prettifyInfo(nodeInfo);
+  newPopup.innerHTML = nodeInfo;
   newPopup.style.backgroundColor = "#eee";
   newPopup.style.color = "#123";
   newPopup.style.padding = "10px";
@@ -2946,14 +2951,33 @@ function fillStatsElement(nodeInfo, { top, left, width }) {
   return newPopup;
 }
 
-function prettifyInfo(elInfo) {
-  let tokens = undefined;
-  if (elInfo.tokens)
-    tokens = elInfo.tokens.map(
-      t => `<span id=${t.id} class=${"token"}>${t.id}</span>`
-    );
+function prettifyNode(nodeInfo) {
+  const json = prettifyJSON(nodeInfo);
 
-  return JSON.stringify({ ...elInfo, tokens }, undefined, 2)
+  return "Node:<br><br>" + json;
+}
+
+function prettifyTransition(info) {
+  const transition = prettifyJSON(info.transition);
+  const tokens = prettifyTokens(info.tokens);
+
+  return (
+    "Transition:<br><br>" + transition + "<br><br>" + "Tokens:<br><br>" + tokens
+  );
+}
+
+function prettifyTokens(tokens) {
+  return tokens.map(t => `<span id=${t.id} class=${"token"}>${t.id}</span>`);
+}
+
+function prettifyToken(token) {
+  const json = prettifyJSON(token);
+
+  return "Token:<br><br>" + json;
+}
+
+function prettifyJSON(obj) {
+  return JSON.stringify(obj, undefined, 2)
     .replace(/\n/g, "<br>")
     .replace(/\s\s/g, "&#8194&#8194");
 }
