@@ -1,5 +1,5 @@
 module.exports = {
-  mode: "development",
+  mode: "production",
   entry: "./src/index.js",
   devtool: "cheap-module-source-map",
   output: {
