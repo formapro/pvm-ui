@@ -2843,104 +2843,112 @@ function getRenderedGraph(digraph) {
   });
 }
 
-async function renderGraph({ dot, process, tokens }, rootId) {
-  const root = rootId ? document.getElementById(rootId) : document.body;
-  const fakePopup = createStatsElement();
-  const svgGraph = await getRenderedGraph(dot);
-  // const cachedTransitionsInfo = {};
+function renderGraph({ dot, process, tokens }, rootId) {
+  if (document.readyState === "interactive") {
+    execRenderGraph();
+  } else {
+    document.addEventListener("DOMContentLoaded", execRenderGraph);
+  }
 
-  root.append(fakePopup);
-  root.append(svgGraph);
+  async function execRenderGraph() {
+    const root = rootId ? document.getElementById(rootId) : document.body;
+    const fakePopup = createStatsElement();
+    const svgGraph = await getRenderedGraph(dot);
+    // const cachedTransitionsInfo = {};
 
-  const nodes = document.getElementsByClassName("node");
-  const edges = document.getElementsByClassName("edge");
+    root.append(fakePopup);
+    root.append(svgGraph);
 
-  for (const node of nodes)
-    createGraphElHandler(getNodeById, prettifyNode)(node);
-  for (const edge of edges)
-    createGraphElHandler(getTransitionById, prettifyTransition)(edge);
+    const nodes = document.getElementsByClassName("node");
+    const edges = document.getElementsByClassName("edge");
 
-  document.body.addEventListener("click", hidePopupStats);
+    for (const node of nodes)
+      createGraphElHandler(getNodeById, prettifyNode)(node);
+    for (const edge of edges)
+      createGraphElHandler(getTransitionById, prettifyTransition)(edge);
 
-  // === where ===
+    document.body.addEventListener("click", hidePopupStats);
 
-  function createGraphElHandler(getElement, prettifyInfo) {
-    return function handleGraphElement(el) {
-      const id = el.id;
-      const elemInfo = getElement(id);
+    // === where ===
 
-      if (!elemInfo) return;
+    function createGraphElHandler(getElement, prettifyInfo) {
+      return function handleGraphElement(el) {
+        const id = el.id;
+        const elemInfo = getElement(id);
 
-      el.addEventListener("click", function(ev) {
-        const oldPopup = document.getElementById(STATS_POPUP_ID);
-        const clientRect = el.getBoundingClientRect();
-        const newPopup = fillStatsElement(prettifyInfo(elemInfo), clientRect);
+        if (!elemInfo) return;
 
-        // curNodeInfo = nodeInfo;
-        curPopup = newPopup;
-        root.replaceChild(newPopup, oldPopup); // newPopup.replaceWith(oldPopup);
+        el.addEventListener("click", function(ev) {
+          const oldPopup = document.getElementById(STATS_POPUP_ID);
+          const clientRect = el.getBoundingClientRect();
+          const newPopup = fillStatsElement(prettifyInfo(elemInfo), clientRect);
 
-        if (elemInfo.tokens) {
-          const tokenElements = document.getElementsByClassName("token");
+          // curNodeInfo = nodeInfo;
+          curPopup = newPopup;
+          root.replaceChild(newPopup, oldPopup); // newPopup.replaceWith(oldPopup);
 
-          for (const tokenEl of tokenElements) {
-            tokenEl.addEventListener("click", ev => {
-              const tokenInfo = elemInfo.tokens.find(
-                t => t.token.id === tokenEl.id
-              );
-              curPopup.innerHTML = prettifyToken(tokenInfo);
-              ev.stopPropagation();
-            });
+          if (elemInfo.tokens) {
+            const tokenElements = document.getElementsByClassName("token");
+
+            for (const tokenEl of tokenElements) {
+              tokenEl.addEventListener("click", ev => {
+                const tokenInfo = elemInfo.tokens.find(
+                  t => t.token.id === tokenEl.id
+                );
+                curPopup.innerHTML = prettifyToken(tokenInfo);
+                ev.stopPropagation();
+              });
+            }
           }
-        }
 
-        newPopup.addEventListener("click", ev => ev.stopPropagation());
+          newPopup.addEventListener("click", ev => ev.stopPropagation());
 
-        ev.stopPropagation();
-      });
-    };
-  }
-
-  function getNodeById(id) {
-    return process.nodes[id];
-  }
-
-  function getTransitionById(id) {
-    // if (cachedTransitionsInfo[id]) return cachedTransitionsInfo[id];
-
-    const transition = process.transitions[id];
-
-    if (!transition) return;
-
-    const trTokens = [];
-
-    for (const token of tokens) {
-      const tokensInfo = token.transitions.filter(
-        tokTr => tokTr.transitionId === transition.id
-      );
-      const tokenRelatedTransInfo = tokensInfo.sort(
-        (a, b) => b.time - a.time
-      )[0];
-
-      if (tokenRelatedTransInfo) {
-        trTokens.push({
-          token: { ...token, transitions: undefined },
-          state: tokenRelatedTransInfo.state
+          ev.stopPropagation();
         });
-      }
+      };
     }
 
-    const trInfo = { transition, tokens: trTokens };
+    function getNodeById(id) {
+      return process.nodes[id];
+    }
 
-    // cachedTransitionsInfo[transition.id] = trInfo;
+    function getTransitionById(id) {
+      // if (cachedTransitionsInfo[id]) return cachedTransitionsInfo[id];
 
-    return trInfo;
-  }
+      const transition = process.transitions[id];
 
-  function hidePopupStats() {
-    if (curPopup !== FAKE_POPUP) {
-      root.replaceChild(FAKE_POPUP, curPopup);
-      curPopup = FAKE_POPUP;
+      if (!transition) return;
+
+      const trTokens = [];
+
+      for (const token of tokens) {
+        const tokensInfo = token.transitions.filter(
+          tokTr => tokTr.transitionId === transition.id
+        );
+        const tokenRelatedTransInfo = tokensInfo.sort(
+          (a, b) => b.time - a.time
+        )[0];
+
+        if (tokenRelatedTransInfo) {
+          trTokens.push({
+            token: { ...token, transitions: undefined },
+            state: tokenRelatedTransInfo.state
+          });
+        }
+      }
+
+      const trInfo = { transition, tokens: trTokens };
+
+      // cachedTransitionsInfo[transition.id] = trInfo;
+
+      return trInfo;
+    }
+
+    function hidePopupStats() {
+      if (curPopup !== FAKE_POPUP) {
+        root.replaceChild(FAKE_POPUP, curPopup);
+        curPopup = FAKE_POPUP;
+      }
     }
   }
 }
