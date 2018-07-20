@@ -38,8 +38,25 @@ function renderGraph({ dot, process, tokens }, rootId) {
 
     for (const node of nodes)
       createGraphElHandler(getNodeById, prettifyNode)(node);
-    for (const edge of edges)
+    for (const edge of edges) {
       createGraphElHandler(getTransitionById, prettifyTransition)(edge);
+      edge.addEventListener("mouseover", ev => {
+        const path = edge.querySelector("path");
+        const polygon = edge.querySelector("polygon");
+
+        path.setAttribute("stroke-width", 3);
+        path.style.cursor = "pointer";
+        polygon.style.cursor = "pointer";
+      });
+      edge.addEventListener("mouseleave", ev => {
+        const path = edge.querySelector("path");
+        const polygon = edge.querySelector("polygon");
+
+        path.setAttribute("stroke-width", 1);
+        path.style.cursor = "auto";
+        polygon.style.cursor = "auto";
+      });
+    }
 
     document.body.addEventListener("click", hidePopupStats);
 
