@@ -132,6 +132,7 @@ function createStatsElement() {
   el.id = STATS_POPUP_ID;
   el.className = STATS_POPUP_CLASS;
   el.style.minWidth = "500px";
+  el.style.position = "absolute";
   return el;
 }
 
@@ -141,7 +142,6 @@ function fillStatsElement(nodeInfo, { top, left, width }) {
   newPopup.style.backgroundColor = "#eee";
   newPopup.style.color = "#123";
   newPopup.style.padding = "10px";
-  newPopup.style.position = "absolute";
   newPopup.style.borderRadius = "3px";
   newPopup.style.top = window.scrollY + top + "px";
   newPopup.style.left = window.scrollX + left + width + 10 + "px";
