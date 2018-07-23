@@ -2862,26 +2862,13 @@ function renderGraph({ dot, process, tokens }, rootId) {
     const nodes = document.getElementsByClassName("node");
     const edges = document.getElementsByClassName("edge");
 
-    for (const node of nodes)
+    for (const node of nodes) {
       createGraphElHandler(getNodeById, prettifyNode)(node);
+      emphasizeNodeOnMouseOver(node);
+    }
     for (const edge of edges) {
       createGraphElHandler(getTransitionById, prettifyTransition)(edge);
-      edge.addEventListener("mouseover", ev => {
-        const path = edge.querySelector("path");
-        const polygon = edge.querySelector("polygon");
-
-        path.setAttribute("stroke-width", 3);
-        path.style.cursor = "pointer";
-        polygon.style.cursor = "pointer";
-      });
-      edge.addEventListener("mouseleave", ev => {
-        const path = edge.querySelector("path");
-        const polygon = edge.querySelector("polygon");
-
-        path.setAttribute("stroke-width", 1);
-        path.style.cursor = "auto";
-        polygon.style.cursor = "auto";
-      });
+      emphasizeEdgeOnMouseOver(edge);
     }
 
     document.body.addEventListener("click", hidePopupStats);
@@ -3023,6 +3010,42 @@ function prettifyJSON(obj) {
   return JSON.stringify(obj, undefined, 2)
     .replace(/\n/g, "<br>")
     .replace(/\s\s/g, "&#8194&#8194");
+}
+
+function emphasizeEdgeOnMouseOver(edge) {
+  edge.addEventListener("mouseover", ev => {
+    const path = edge.querySelector("path");
+    const polygon = edge.querySelector("polygon");
+
+    path.setAttribute("stroke-width", 3);
+    path.style.cursor = "pointer";
+    polygon.style.cursor = "pointer";
+  });
+  edge.addEventListener("mouseleave", ev => {
+    const path = edge.querySelector("path");
+    const polygon = edge.querySelector("polygon");
+
+    path.setAttribute("stroke-width", 1);
+    path.style.cursor = "auto";
+    polygon.style.cursor = "auto";
+  });
+}
+
+function emphasizeNodeOnMouseOver(node) {
+  node.addEventListener("mouseover", ev => {
+    const polygon = node.querySelector("polygon");
+
+    polygon.setAttribute("stroke-width", 3);
+    polygon.style.backgroundColor = "#999";
+    node.style.cursor = "pointer";
+  });
+  node.addEventListener("mouseleave", ev => {
+    const polygon = node.querySelector("polygon");
+
+    polygon.setAttribute("stroke-width", 1);
+    polygon.style.backgroundColor = "#fff";
+    node.style.cursor = "auto";
+  });
 }
 
 pvm.renderGraph = renderGraph;
