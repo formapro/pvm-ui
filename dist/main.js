@@ -2941,7 +2941,7 @@ function renderGraph({ dot, process, tokens }, rootId) {
       for (const token of tokens) {
         const passedTransitions = token.transitions
           .filter(tokTr => tokTr.transitionId === transition.id)
-          .sort((a, b) => b.time - a.time);
+          .sort((a, b) => a.time - b.time);
 
         for (const passedTransInfo of passedTransitions) {
           trTokens.push({
