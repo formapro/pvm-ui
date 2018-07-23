@@ -2910,7 +2910,7 @@ function renderGraph({ dot, process, tokens }, rootId) {
             for (const tokenEl of tokenElements) {
               tokenEl.addEventListener("click", ev => {
                 const tokenInfo = elemInfo.tokens.find(
-                  t => t.token.id === tokenEl.id
+                  t => t.token.id === tokenEl.dataset.id
                 );
                 curPopup.innerHTML = prettifyToken(tokenInfo);
                 ev.stopPropagation();
@@ -2939,17 +2939,14 @@ function renderGraph({ dot, process, tokens }, rootId) {
       const trTokens = [];
 
       for (const token of tokens) {
-        const tokensInfo = token.transitions.filter(
-          tokTr => tokTr.transitionId === transition.id
-        );
-        const tokenRelatedTransInfo = tokensInfo.sort(
-          (a, b) => b.time - a.time
-        )[0];
+        const passedTransitions = token.transitions
+          .filter(tokTr => tokTr.transitionId === transition.id)
+          .sort((a, b) => b.time - a.time);
 
-        if (tokenRelatedTransInfo) {
+        for (const passedTransInfo of passedTransitions) {
           trTokens.push({
             token: { ...token, transitions: undefined },
-            state: tokenRelatedTransInfo.state
+            state: passedTransInfo.state
           });
         }
       }
@@ -3007,12 +3004,13 @@ function prettifyTransition(info) {
 }
 
 function prettifyTokens(tokens) {
-  return tokens.map(
-    tInfo =>
-      `<span id=${tInfo.token.id} class=${"token"}>${tInfo.token.id} - ${
-        tInfo.state
-      }</span>`
-  );
+  return tokens
+    .map(
+      tInfo =>
+        `<div data-id=${tInfo.token.id} class=${"token"}>${tInfo.token.id} - 
+${tInfo.state}</div>`
+    )
+    .join("");
 }
 
 function prettifyToken(tokenInfo) {
