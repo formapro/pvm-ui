@@ -3,12 +3,11 @@ const renderer = require("viz.js/full.render");
 
 const STATS_POPUP_ID = "stats-popup";
 const STATS_POPUP_CLASS = "StatPopup";
-const FAKE_POPUP = createStatsElement();
+const FAKE_POPUP = createStatsElement({ padding: "0" });
 const pvm = {};
 
 let viz = new Viz(renderer);
-let curPopup = FAKE_POPUP;
-// let curNodeInfo = null;
+let curPopup = null;
 
 function getRenderedGraph(digraph) {
   return viz.renderSVGElement(digraph).catch(err => {
@@ -17,7 +16,7 @@ function getRenderedGraph(digraph) {
   });
 }
 
-function renderGraph({ dot, process, tokens }, rootId) {
+function renderGraph({ dot, process, tokens }, rootId, linkId) {
   if (document.readyState === "interactive") {
     execRenderGraph();
   } else {
@@ -26,11 +25,11 @@ function renderGraph({ dot, process, tokens }, rootId) {
 
   async function execRenderGraph() {
     const root = rootId ? document.getElementById(rootId) : document.body;
-    const fakePopup = createStatsElement();
     const svgGraph = await getRenderedGraph(dot);
     // const cachedTransitionsInfo = {};
 
-    root.append(fakePopup);
+    root.append(FAKE_POPUP);
+    curPopup = FAKE_POPUP;
     root.append(svgGraph);
 
     const nodes = document.getElementsByClassName("node");
@@ -47,7 +46,11 @@ function renderGraph({ dot, process, tokens }, rootId) {
 
     document.body.addEventListener("click", hidePopupStats);
 
+    showProcess();
+
+    //
     // === where ===
+    //
 
     function createGraphElHandler(getElement, prettifyInfo) {
       return function handleGraphElement(el) {
@@ -57,13 +60,10 @@ function renderGraph({ dot, process, tokens }, rootId) {
         if (!elemInfo) return;
 
         el.addEventListener("click", function(ev) {
-          const oldPopup = document.getElementById(STATS_POPUP_ID);
           const clientRect = el.getBoundingClientRect();
           const newPopup = fillStatsElement(prettifyInfo(elemInfo), clientRect);
 
-          // curNodeInfo = nodeInfo;
-          curPopup = newPopup;
-          root.replaceChild(newPopup, oldPopup); // newPopup.replaceWith(oldPopup);
+          replacePopup(newPopup);
 
           if (elemInfo.tokens) {
             const tokenElements = document.getElementsByClassName("token");
@@ -120,30 +120,53 @@ function renderGraph({ dot, process, tokens }, rootId) {
     }
 
     function hidePopupStats() {
-      if (curPopup !== FAKE_POPUP) {
-        root.replaceChild(FAKE_POPUP, curPopup);
-        curPopup = FAKE_POPUP;
+      if (curPopup !== FAKE_POPUP) replacePopup(FAKE_POPUP);
+    }
+
+    function showProcess() {
+      const el = document.getElementById(linkId);
+
+      if (!el) {
+        console.warn("There is no link with id: ", linkId);
+        return;
       }
+
+      el.addEventListener("click", ev => {
+        ev.preventDefault();
+        ev.stopPropagation();
+
+        const newPopup = createStatsElement();
+        newPopup.innerHTML = prettifyJSON(process);
+        newPopup.style.top = "100px";
+        newPopup.style.left = "100px";
+
+        replacePopup(newPopup);
+      });
+    }
+
+    function replacePopup(newPopup) {
+      root.replaceChild(newPopup, curPopup);
+      curPopup = newPopup;
     }
   }
 }
 
-function createStatsElement() {
+function createStatsElement(style = {}) {
   const el = document.createElement("div");
   el.id = STATS_POPUP_ID;
   el.className = STATS_POPUP_CLASS;
   el.style.minWidth = "500px";
   el.style.position = "absolute";
+  el.style.borderRadius = "3px";
+  el.style.color = style.color || "#123";
+  el.style.backgroundColor = style.backgroundColor || "#eee";
+  el.style.padding = style.padding || "10px";
   return el;
 }
 
 function fillStatsElement(nodeInfo, { top, left, width }) {
   const newPopup = createStatsElement();
   newPopup.innerHTML = nodeInfo;
-  newPopup.style.backgroundColor = "#eee";
-  newPopup.style.color = "#123";
-  newPopup.style.padding = "10px";
-  newPopup.style.borderRadius = "3px";
   newPopup.style.top = window.scrollY + top + "px";
   newPopup.style.left = window.scrollX + left + width + 10 + "px";
   return newPopup;
@@ -223,4 +246,5 @@ function emphasizeNodeOnMouseOver(node) {
 }
 
 pvm.renderGraph = renderGraph;
+
 global.pvm = pvm;
