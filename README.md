@@ -39,7 +39,7 @@ In Browser:
 </script>
 ```
 
-Check the [demo](https://github.com/makasim/pvm-ui).
+Check the [demo](https://formapro.github.io/pvm-ui/).
 
 ### Build
 
