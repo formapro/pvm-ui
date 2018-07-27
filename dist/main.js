@@ -2926,13 +2926,13 @@ function renderGraph({ dot, process, tokens }, rootId) {
       const trTokens = [];
 
       for (const token of tokens) {
-        const passedTransitions = token.transitions
+        const curTransitionPasses = token.transitions
           .filter(tokTr => tokTr.transitionId === transition.id)
           .sort((a, b) => a.time - b.time);
 
-        for (const passedTransInfo of passedTransitions) {
+        for (const passedTransInfo of curTransitionPasses) {
           trTokens.push({
-            token: { ...token, transitions: undefined },
+            token: { ...token, transitions: curTransitionPasses },
             state: passedTransInfo.state
           });
         }
@@ -3013,7 +3013,7 @@ function prettifyJSON(obj) {
 }
 
 function emphasizeEdgeOnMouseOver(edge) {
-  edge.addEventListener("mouseover", ev => {
+  edge.addEventListener("mouseenter", ev => {
     const path = edge.querySelector("path");
     const polygon = edge.querySelector("polygon");
 
