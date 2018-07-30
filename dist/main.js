@@ -3056,17 +3056,19 @@ function emphasizeEdgeOnMouseOver(edge) {
 
 function emphasizeNodeOnMouseOver(node) {
   node.addEventListener("mouseover", ev => {
-    const polygon = node.querySelector("polygon");
+    const shape =
+      node.querySelector("polygon") || node.querySelector("ellipse");
 
-    polygon.setAttribute("stroke-width", 3);
-    polygon.style.backgroundColor = "#999";
+    shape.setAttribute("stroke-width", 3);
+    shape.style.backgroundColor = "#999";
     node.style.cursor = "pointer";
   });
   node.addEventListener("mouseleave", ev => {
-    const polygon = node.querySelector("polygon");
+    const shape =
+      node.querySelector("polygon") || node.querySelector("ellipse");
 
-    polygon.setAttribute("stroke-width", 1);
-    polygon.style.backgroundColor = "#fff";
+    shape.setAttribute("stroke-width", 1);
+    shape.style.backgroundColor = "#fff";
     node.style.cursor = "auto";
   });
 }
