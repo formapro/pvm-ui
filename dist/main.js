@@ -2913,7 +2913,7 @@ function renderGraph({ dot, process, tokens }, rootId, linkId) {
     }
 
     function getNodeById(id) {
-      return process.nodes[id];
+      return process.nodes && process.nodes[id];
     }
 
     function getTransitionById(id) {
