@@ -483,7 +483,7 @@ var pvmContext = {
     "dot": "digraph G {\n    rankdir=TB;\n    ranksep=\"1\";\n    __start [label=Start, color=blue, shape=circle];\n    __end [label=End, color=red, shape=circle];\n    fork [label=fork, id=fork, shape=box];\n    \"task_1\" [label=\"task_1\", id=\"task_1\", shape=box];\n    \"task_2\" [label=\"task_2\", id=\"task_2\", shape=box];\n    \"task_3\" [label=\"task_3\", id=\"task_3\", shape=box];\n    \"task_4\" [label=\"task_4\", id=\"task_4\", shape=box];\n    join [label=join, id=join, shape=box];\n    fork -> \"task_1\" [id=\"2425336b-d945-4871-b736-e2ba2731bab9\", label=\"\", color=blue];\n    fork -> \"task_2\" [id=\"3ac5c022-e51e-4666-9ead-fc6b42c78ff8\", label=\"\", color=blue];\n    fork -> \"task_3\" [id=\"574f2e1d-2fe1-4201-8989-19820dfaf7c8\", label=\"\", color=blue];\n    \"task_1\" -> join [id=\"da58a230-00b9-4d37-9636-33880a7c74b9\", label=\"\", color=red];\n    \"task_2\" -> join [id=\"5ddb0973-e091-4a4f-b712-3a5500a55766\", label=\"\", color=red];\n    \"task_3\" -> join [id=\"605cea06-ef5a-4212-bd18-c9235057055c\", label=\"\", color=blue];\n    join -> \"task_4\" [id=\"175e13af-ece9-454c-8545-456632ed9698\", label=\"\", color=blue];\n    \"task_4\" -> __end [label=\"\", color=blue];\n    __start -> fork [label=\"\", color=blue];\n}\n"
 };
 
-pvm.renderGraph(json, "graph", "show_process_link");
+pvm.renderGraph(pvmContext, "graph", "show_process_link");
 
 </script>
 
