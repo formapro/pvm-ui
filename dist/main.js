@@ -2842,9 +2842,9 @@ function getRenderedGraph(digraph) {
   });
 }
 
-function renderGraph({ dot, process, tokens }, rootId, linkId) {
-  if (document.readyState === "interactive") {
-    execRenderGraph();
+async function renderGraph({ dot, process, tokens }, rootId, linkId) {
+  if (document.readyState === "interactive" || document.readyState === "complete") {
+    await execRenderGraph();
   } else {
     document.addEventListener("DOMContentLoaded", execRenderGraph);
   }
@@ -2854,6 +2854,8 @@ function renderGraph({ dot, process, tokens }, rootId, linkId) {
     const svgGraph = await getRenderedGraph(dot);
     // const cachedTransitionsInfo = {};
 
+    root.innerHTML = '';
+    // [...root.children].forEach(ch => root.removeChild(ch));
     root.append(FAKE_POPUP);
     curPopup = FAKE_POPUP;
     root.append(svgGraph);
